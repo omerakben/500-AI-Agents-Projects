@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Fable 5 Prompt Forge — Single-Shot Prompt Library</title>
+<style>
+  :root{
+    --bg:#0b0d14; --panel:#12151f; --panel2:#181c2a; --line:#262b3d;
+    --ink:#e8eaf2; --dim:#8b91a7; --accent:#7c5cff; --accent2:#00e0c6;
+    --gold:#ffc857; --pink:#ff5c8a; --radius:14px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(900px 500px at 80% -10%, rgba(124,92,255,.18), transparent 60%),
+      radial-gradient(700px 400px at 10% 110%, rgba(0,224,198,.10), transparent 60%);
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 20px 80px;position:relative;z-index:1}
+
+  /* ---------- header ---------- */
+  header{text-align:center;margin-bottom:26px}
+  .kicker{
+    display:inline-block;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--accent2);border:1px solid var(--line);padding:.4em 1em;border-radius:99px;
+    background:var(--panel);margin-bottom:14px;
+  }
+  h1{font-size:clamp(1.9rem,5vw,3rem);line-height:1.1;font-weight:800}
+  h1 .grad{
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{color:var(--dim);margin-top:10px;max-width:640px;margin-inline:auto;line-height:1.5}
+
+  /* ---------- forge meter ---------- */
+  .meter{
+    margin:22px auto 0;max-width:560px;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:14px 18px;
+  }
+  .meter-top{display:flex;justify-content:space-between;font-size:.82rem;color:var(--dim);margin-bottom:8px}
+  .meter-top b{color:var(--gold);font-variant-numeric:tabular-nums}
+  .bar{height:10px;background:var(--panel2);border-radius:99px;overflow:hidden}
+  .bar i{
+    display:block;height:100%;width:0%;border-radius:99px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2),var(--gold));
+    transition:width .6s cubic-bezier(.2,.8,.2,1);
+  }
+  .meter .hint{font-size:.72rem;color:var(--dim);margin-top:8px;text-align:center}
+
+  /* ---------- tabs ---------- */
+  nav{display:flex;gap:8px;justify-content:center;margin:26px 0 22px;flex-wrap:wrap}
+  nav button{
+    background:var(--panel);border:1px solid var(--line);color:var(--dim);
+    padding:.6em 1.3em;border-radius:99px;cursor:pointer;font-size:.92rem;font-weight:600;
+    transition:.15s;
+  }
+  nav button:hover{color:var(--ink);border-color:var(--accent)}
+  nav button.on{background:linear-gradient(90deg,var(--accent),#5e8bff);color:#fff;border-color:transparent}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+  .search{
+    flex:1;min-width:220px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:.65em 1em;color:var(--ink);font-size:.95rem;outline:none;
+  }
+  .search:focus{border-color:var(--accent)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+  .chip{
+    background:var(--panel);border:1px solid var(--line);color:var(--dim);
+    padding:.35em .9em;border-radius:99px;font-size:.8rem;cursor:pointer;transition:.15s;
+  }
+  .chip:hover{color:var(--ink)}
+  .chip.on{background:var(--accent2);color:#04211d;border-color:transparent;font-weight:700}
+  .btn{
+    background:linear-gradient(90deg,var(--accent),#5e8bff);border:none;color:#fff;
+    padding:.65em 1.3em;border-radius:10px;font-weight:700;cursor:pointer;font-size:.92rem;
+    transition:transform .1s;
+  }
+  .btn:active{transform:scale(.96)}
+  .btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--ink)}
+  .btn.gold{background:linear-gradient(90deg,#ff9d3f,var(--gold));color:#241500}
+
+  /* ---------- cards ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;display:flex;flex-direction:column;gap:10px;
+    transition:border-color .15s, transform .15s;
+  }
+  .card:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .card h3{font-size:1.02rem;line-height:1.3}
+  .cat{font-size:.7rem;color:var(--accent2);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  .wow{color:var(--gold);font-size:.8rem;letter-spacing:.1em}
+  .ptext{
+    color:var(--dim);font-size:.86rem;line-height:1.55;
+    display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .card.open .ptext{display:block;-webkit-line-clamp:unset;color:var(--ink)}
+  .card-actions{display:flex;gap:8px;margin-top:auto}
+  .mini{
+    background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+    padding:.45em .9em;border-radius:8px;font-size:.8rem;cursor:pointer;transition:.15s;
+  }
+  .mini:hover{border-color:var(--accent2)}
+  .mini.copied{background:var(--accent2);color:#04211d;border-color:transparent;font-weight:700}
+
+  /* ---------- machine ---------- */
+  .machine{max-width:760px;margin:0 auto}
+  .slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px}
+  .slot{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;
+    text-align:center;min-height:92px;display:flex;flex-direction:column;gap:6px;justify-content:center;
+    cursor:pointer;transition:.15s;position:relative;
+  }
+  .slot:hover{border-color:var(--accent)}
+  .slot .lbl{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+  .slot .val{font-size:.88rem;font-weight:700;line-height:1.3}
+  .slot .lock{position:absolute;top:6px;right:8px;font-size:.75rem;opacity:.35}
+  .slot.locked{border-color:var(--gold)}
+  .slot.locked .lock{opacity:1}
+  .slot.spin .val{animation:blur .35s}
+  @keyframes blur{0%{filter:blur(4px);opacity:.3}100%{filter:blur(0);opacity:1}}
+  .machine-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+  .output{
+    background:var(--panel);border:1px solid var(--accent);border-radius:var(--radius);
+    padding:20px;line-height:1.65;font-size:.95rem;white-space:pre-wrap;
+  }
+  .output.empty{border-color:var(--line);color:var(--dim);text-align:center;font-style:italic}
+  .combo{
+    text-align:center;color:var(--dim);font-size:.82rem;margin:16px 0;
+  }
+  .combo b{color:var(--accent2);font-variant-numeric:tabular-nums}
+
+  /* ---------- about ---------- */
+  .about{max-width:680px;margin:0 auto;color:var(--dim);line-height:1.7;font-size:.95rem}
+  .about h2{color:var(--ink);margin:22px 0 8px;font-size:1.15rem}
+  .about code{background:var(--panel2);padding:.15em .45em;border-radius:6px;color:var(--accent2);font-size:.85em}
+
+  .empty-msg{text-align:center;color:var(--dim);padding:50px 0;font-style:italic}
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--accent2);color:#04211d;font-weight:700;padding:.7em 1.4em;border-radius:99px;
+    transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:10;font-size:.9rem;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  footer{text-align:center;color:var(--dim);font-size:.78rem;margin-top:50px;line-height:1.6}
+  footer a{color:var(--accent2);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Claude Fable 5 × Ultracode</div>
+  <h1>⚡ <span class="grad">Fable 5 Prompt Forge</span></h1>
+  <p class="sub">A library of single-shot prompts engineered to produce complete, publishable projects in <b>one message</b> — plus a Goal Prompt Machine that forges millions more. Paste any prompt into Claude and ship the artifact.</p>
+
+  <div class="meter">
+    <div class="meter-top"><span>🔥 Forge progress</span><span><b id="forgedCount">0</b> / 4,000 prompts forged</span></div>
+    <div class="bar"><i id="forgedBar"></i></div>
+    <div class="hint">Every copy or spin counts toward the 4,000 goal. It persists — come back and keep forging.</div>
+  </div>
+</header>
+
+<nav>
+  <button class="on" data-tab="library">📚 Library</button>
+  <button data-tab="machine">🎰 Goal Prompt Machine</button>
+  <button data-tab="about">🧭 How to use</button>
+</nav>
+
+<!-- =============== LIBRARY =============== -->
+<section id="tab-library">
+  <div class="controls">
+    <input class="search" id="search" placeholder="Search prompts… (try: physics, music, terminal, garden)">
+    <button class="btn gold" id="surprise">🎲 Surprise me</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty-msg" id="noResults" style="display:none">Nothing matched — the Machine tab can forge one for you instead.</div>
+</section>
+
+<!-- =============== MACHINE =============== -->
+<section id="tab-machine" style="display:none">
+  <div class="machine">
+    <div class="slots" id="slots"></div>
+    <div class="machine-actions">
+      <button class="btn" id="spin">🎰 Spin the forge</button>
+      <button class="btn ghost" id="copyGen">📋 Copy prompt</button>
+    </div>
+    <div class="output empty" id="genOut">Spin the forge to assemble a brand-new single-shot prompt.
+Click any slot to lock it 🔒 and re-roll around it.</div>
+    <p class="combo">This machine holds <b id="comboCount"></b> unique prompt combinations — the 4,000 goal, multiplied.</p>
+  </div>
+</section>
+
+<!-- =============== ABOUT =============== -->
+<section id="tab-about" style="display:none">
+  <div class="about">
+    <h2>What is this?</h2>
+    <p>A self-contained prompt library built for <b>Claude Fable 5</b>. Every prompt is <i>single-shot</i>: one paste, one complete artifact out — a game, simulation, tool, or toy in a single HTML file with no build step and no external assets. Perfect for quick publishing to GitHub Pages, CodePen, or itch.io.</p>
+
+    <h2>How to use a prompt</h2>
+    <p>1. Hit <code>Copy</code> on any card (or spin the Machine).<br>
+       2. Paste it into Claude — no extra context needed.<br>
+       3. Claude returns a finished artifact. Save it as <code>index.html</code> and publish.</p>
+
+    <h2>Why these prompts work</h2>
+    <p>Each one bakes in the four ingredients of a great single-shot prompt: a <b>vivid concept</b> (so the model commits to a direction), <b>hard constraints</b> (single file, no assets, no placeholders), a <b>polish bar</b> (juice, feedback, a title screen), and <b>one surprising twist</b> (the detail that makes people share it).</p>
+
+    <h2>The 4,000 goal</h2>
+    <p>The forge meter tracks every prompt you copy or spin, persisted in your browser. The curated library seeds the collection; the Goal Prompt Machine guarantees the supply never runs out — its slot reels multiply into millions of unique, coherent prompts.</p>
+
+    <h2>Remixing</h2>
+    <p>Stack prompts: copy two cards and ask Claude to fuse them. Or paste a card and add <code>"…but make it multiplayer on one keyboard"</code>. The prompts are starting points — the forge rewards mutation.</p>
+  </div>
+</section>
+
+<footer>
+  Forged by Claude Fable 5 · Part of the <a href="https://github.com/ashishpatel26/500-AI-Agents-Projects">500 AI Agents Projects</a> collection<br>
+  Single file · No dependencies · MIT
+</footer>
+</div>
+
+<div class="toast" id="toast">Copied ✓</div>
+
+<script>
+/* ============================================================
+   CURATED SINGLE-SHOT PROMPTS
+   Every prompt is engineered to yield a complete, publishable
+   single-file artifact from one paste into Claude.
+   ============================================================ */
+const POLISH = "Deliver ONE self-contained HTML file — no external assets, no libraries, no build step, no placeholders or TODOs. Make it feel finished: a title or header, smooth 60fps motion, satisfying feedback on every interaction, and one small hidden detail that rewards curious users.";
+
+const PROMPTS = [
+/* ---------- 🎮 Games & Toys ---------- */
+{c:"Games & Toys",w:5,t:"Gravity Golf Across the Solar System",p:"Build a one-button golf game where you putt a ball between miniature planets, and each planet bends the ball's path with real inverse-square gravity. Hold to charge, release to shoot, and let orbital slingshots be the core skill. 9 handcrafted holes, a stroke counter, trajectory ghost trails, and a celebration when you ace a hole using a gravity assist. "+POLISH},
+{c:"Games & Toys",w:5,t:"Snake, But the Food Runs Away",p:"Make a snake game where the food is alive: it has simple flee-AI, reads your direction, and panics near walls. Eating it grows you AND makes the next food smarter, with visible 'IQ' levels. Add a taunting emoji face on the food, screen shake on capture, and a high score stored in localStorage. "+POLISH},
+{c:"Games & Toys",w:4,t:"Typing Defender",p:"Create a typing defense game: words fall like meteors toward a city skyline, and typing a word zaps it with a laser from the rooftop turret. Speed ramps with score, mistyped letters cause sparks and a buzz, and a combo multiplier rewards flawless streaks. Procedural words grouped by difficulty tier, all generated in code. "+POLISH},
+{c:"Games & Toys",w:5,t:"One-Key Dungeon",p:"Design a complete dungeon crawler controlled with ONLY the spacebar. Tap to move forward, hold to turn, double-tap to attack — timing is everything. Procedurally generate 5 floors with monsters, gold, and a boss; render in chunky top-down pixels via canvas. Show a 'controls discovered' tutorial that teaches by doing. "+POLISH},
+{c:"Games & Toys",w:4,t:"Sumo Bubbles",p:"Build a two-players-one-keyboard sumo game: each player is a wobbling bubble (WASD vs arrow keys) trying to bounce the other out of a shrinking ring. Squash-and-stretch physics, a best-of-5 scoreboard, and increasingly absurd round modifiers (low gravity, giant mode, slippery ice). "+POLISH},
+{c:"Games & Toys",w:4,t:"Heist Memory",p:"Create a memory game disguised as a heist: a museum floor of face-down 'security cards' where matching pairs disables lasers, but every wrong flip advances a patrolling guard one room closer. Beat all pairs before the guard arrives. Tense music via WebAudio, three difficulty floors, and a getaway animation when you win. "+POLISH},
+{c:"Games & Toys",w:5,t:"Lighthouse Keeper",p:"Make a night-time arcade game where you control a lighthouse beam with the mouse to guide little ships through procedurally generated rocks. Ships steer toward your light; rocks sink them. Waves, fog banks, and a storm that intensifies every level. Score is ships saved; soundscape of ocean and a foghorn via WebAudio. "+POLISH},
+{c:"Games & Toys",w:4,t:"Falling Sand Bakery",p:"Build a falling-sand game themed as a bakery: pour flour, water, sugar, and heat with a brush; they react (flour+water=dough, dough+heat=bread, sugar+heat=caramel… too much heat=burnt). Include emergent recipes, a discovery log of combinations found, and at least 8 elements with cellular-automata interactions. "+POLISH},
+
+/* ---------- 🔬 Simulations ---------- */
+{c:"Simulations",w:5,t:"Ant Colony with Pheromone Trails",p:"Simulate an ant colony on canvas: ants leave evaporating pheromone trails, discover food, and self-organize into supply lines with zero central control. Render pheromones as glowing heat trails. Let me drop food and obstacles with the mouse, tweak evaporation and ant count with sliders, and watch trails reroute around walls in real time. "+POLISH},
+{c:"Simulations",w:5,t:"Tiny Civilization",p:"Build a watchable civilization simulator: pixel villagers on a procedural island chop wood, farm, build houses, have children, and form generational dynasties — every villager has a name, age, job and a one-line biography you can read by hovering. Include a speed control, a population graph, and emergent events (harsh winters, founder deaths) logged in a scrolling chronicle. "+POLISH},
+{c:"Simulations",w:4,t:"Double Pendulum Orchestra",p:"Create a chaos demonstration: five double pendulums released from imperceptibly different angles, drawing their paths in different colors and each plucking a different pentatonic note (WebAudio) when it swings through center. Watch synchrony dissolve into chaos you can hear. Sliders for gravity and damping, plus a 'release in unison' reset. "+POLISH},
+{c:"Simulations",w:5,t:"Flock vs. Falcon",p:"Simulate 400 starlings with full boids flocking (separation, alignment, cohesion) plus one falcon I control with the mouse. The flock bulges, splits, and reforms around the predator like real murmurations. Render as dark silhouettes on a dusk gradient sky. Sliders for each flocking force, and a slow-motion toggle for the beautiful moments. "+POLISH},
+{c:"Simulations",w:4,t:"Plate Tectonics Sandbox",p:"Build an interactive plate-tectonics toy: drag continental plates on a sphere-ish projection, and where they collide, mountains rise with shading; where they split, oceans rift. Run a 'fast-forward 100M years' mode with drifting plates and evolving coastlines. Include a geologic timeline scrubber and labels for the features that form. "+POLISH},
+{c:"Simulations",w:4,t:"Epidemic in a Bead Jar",p:"Make an honest, beautiful SIR epidemic simulation: 500 bouncing beads, infection on contact, recovery timers, and optional interventions I can toggle live — distancing (slower beads), masks (lower transmission), vaccination (pre-immunized fraction). Live-draw the S/I/R curves underneath and annotate the peak. Neutral, educational tone. "+POLISH},
+{c:"Simulations",w:5,t:"Galaxy Collider",p:"Simulate two spiral galaxies (a few thousand stars each, Barnes-Hut or simple n-body approximation) colliding over millions of years. Stars trail tidal arms exactly like real galaxy mergers. Let me set initial positions and velocities by dragging, then watch in time-lapse with bloom-styled rendering. Include three preset famous merger scenarios. "+POLISH},
+{c:"Simulations",w:4,t:"Traffic Jam from Nothing",p:"Demonstrate phantom traffic jams: cars on a circular road following the intelligent-driver model, where one driver's tiny brake tap births a stop-and-go wave that travels backwards forever. Let me click any car to brake-check, color cars by speed, and show a space-time diagram proving the wave moves upstream. Sliders for density and reaction time. "+POLISH},
+
+/* ---------- 🎨 Generative Art ---------- */
+{c:"Generative Art",w:5,t:"Infinite Stained-Glass Windows",p:"Generate procedural stained-glass cathedral windows: Voronoi panes with lead-line borders, light that appears to glow through saturated glass, and rose-window radial symmetry. Every click births a new window with a new palette (dawn, dusk, forest, ocean). Include a slow 'sunbeam' animation drifting across the glass and a download-as-PNG button. "+POLISH},
+{c:"Generative Art",w:4,t:"Ink Garden",p:"Create a meditative generative garden: clicking plants a seed that grows into a unique procedural plant — recursive branching stems, leaves along Fibonacci angles, and flowers whose petal counts and colors come from a seeded random. Plants sway in a gentle wind loop. A moon rises in real time matching my actual clock. Garden persists in localStorage. "+POLISH},
+{c:"Generative Art",w:5,t:"Flow-Field Calligraphy",p:"Build a generative calligraphy machine: thousands of particles ride a Perlin-style flow field, leaving strokes that pool into compositions resembling abstract brush writing. Mouse movement bends the field like wind. Five curated ink palettes, a paper-grain background, pressure-like stroke tapering, and an 'exhibit mode' that composes and frames a finished piece every 30 seconds. "+POLISH},
+{c:"Generative Art",w:4,t:"Skyline Forever",p:"Generate an infinite parallax city at dusk: procedural buildings with lit windows that flicker on as night falls, water reflection below, antenna lights blinking, and occasional window silhouettes (a cat, a plant, someone dancing). Scrolls forever sideways. Time of day cycles over 3 minutes from golden hour to deep night. "+POLISH},
+{c:"Generative Art",w:4,t:"Kaleidoscope of My Drawing",p:"Make a drawing app where everything I draw is mirrored live into a 12-fold kaleidoscope mandala. Brush color cycles slowly through a gradient; strokes have soft glow and slight symmetry-breaking jitter so results feel organic, not mechanical. Include brush size, fold-count control (4–24), a slowly rotating display mode, and PNG export. "+POLISH},
+{c:"Generative Art",w:5,t:"Aurora Machine",p:"Simulate the aurora borealis over a procedural snowy treeline: layered curtains of light driven by noise fields, shifting green-to-violet, with stars and the occasional meteor. The aurora subtly responds to my cursor like solar wind. Include an ambient drone generated with WebAudio that swells with the brightness. Pure atmosphere — make it screensaver-good. "+POLISH},
+{c:"Generative Art",w:4,t:"Generative Album Covers",p:"Build an infinite album-cover generator: each spacebar press composes a new cover — a generated band name and album title (from clever wordlists in code), a procedural visual in one of five art directions (brutalist type, vapor gradients, geometric minimal, photo-noise collage, hand-drawn chaos), and coherent typography. Download button. Make 9 out of 10 covers something you'd actually believe. "+POLISH},
+
+/* ---------- 🎵 Sound & Music ---------- */
+{c:"Sound & Music",w:5,t:"Orbit Sequencer",p:"Invent a musical instrument: planets orbit a sun, and each time one crosses the zero-angle line it plays its note (WebAudio synthesis, pentatonic). Orbit radius sets pitch, size sets volume. Drag to add/remove planets and fling them into eccentric orbits for humanizing rhythm drift. Polyrhythms emerge from orbital periods. Include 3 preset 'solar systems' that play actual nice music. "+POLISH},
+{c:"Sound & Music",w:4,t:"Rain on Things",p:"Build an interactive rain soundscape: rain falls on a scene containing a tin roof, a pond, leaves, and a window — each surface synthesizes a different rain texture in WebAudio (no samples). Dragging a slider changes intensity from drizzle to downpour; thunder rolls occasionally with a flash. Click surfaces to mute/solo them like a mixing desk. Visuals: cozy minimal night scene. "+POLISH},
+{c:"Sound & Music",w:5,t:"Voice-Reactive Creature",p:"Create a creature that lives in my microphone: using getUserMedia and an analyser node, a blob-like critter dances to my voice — pitch moves it up and down, volume makes it grow and glow, silence makes it sleepy. It develops 'moods' based on how I've been talking. Graceful permission flow and a demo mode with synthetic audio if mic is denied. "+POLISH},
+{c:"Sound & Music",w:4,t:"Typewriter Symphony",p:"Make typing musical: every keystroke in a big text area plays a note mapped so that typing real sentences produces surprisingly melodic phrases (vowels = chord tones, space = soft percussion, enter = cadence). Add a subtle visualizer behind the text and a 'replay my writing' mode that performs the document back as music with the words appearing in sync. "+POLISH},
+{c:"Sound & Music",w:4,t:"Pocket Theremin",p:"Build a playable theremin: mouse X is pitch (continuous, with optional snap-to-scale), mouse Y is volume, with vibrato on click-hold. Gorgeous oscilloscope and spectrum visuals. Include a loop recorder so I can layer three takes into a performance, and a ghostly preset that makes everything sound like a 1950s sci-fi film. "+POLISH},
+
+/* ---------- 📊 Data & Explorables ---------- */
+{c:"Data & Explorables",w:5,t:"How Big Is Space, Really",p:"Create a scroll-driven journey from Earth to the edge of the observable universe at honest log-scale: scroll past the Moon, planets, the Oort cloud, nearby stars, the galaxy, and beyond, with distances labeled and witty annotations about how empty everything is. Smooth zoom transitions, a persistent scale bar, and a 'you are here' minimap. All data hardcoded accurately. "+POLISH},
+{c:"Data & Explorables",w:4,t:"The Birthday Paradox, Felt",p:"Build an explorable that makes the birthday paradox visceral: add people to a room one by one (each a dot with a random birthday on a 365-day ring) and watch collision probability climb on a live chart; matched pairs light up and connect. Include a 'run 1000 simulated rooms' mode that converges on theory, and a clear plain-language explanation of why intuition fails. "+POLISH},
+{c:"Data & Explorables",w:5,t:"Sorting Algorithms Race",p:"Stage a live race between six sorting algorithms (bubble, insertion, merge, quick, heap, radix) on the same shuffled data, rendered as side-by-side bar fields with sound (each comparison ticks a pitch). Big-O annotations update with actual operation counts. Let me set array size, choose adversarial inputs (sorted, reversed, few-unique), and crown a winner with a podium. "+POLISH},
+{c:"Data & Explorables",w:4,t:"Compound Interest Time Machine",p:"Build a beautiful compound-interest explorable: drag sliders for monthly amount, rate, and years, and watch a money 'tree' grow alongside an honest chart that splits contributions vs growth. Include the punchline view: 'start 10 years earlier' ghost-line comparison, milestone markers, and inflation toggle. Friendly, non-preachy copy. "+POLISH},
+{c:"Data & Explorables",w:4,t:"Color Vision Explorable",p:"Create an interactive explainer of human color vision: show the three cone response curves, let me pick any color and see how it decomposes into cone stimulation, then demonstrate why purple isn't in the rainbow and how color blindness changes the picture (with accurate simulation filters on a test image drawn in code). Clear, curious, layperson-friendly. "+POLISH},
+{c:"Data & Explorables",w:5,t:"The Map of Mathematics",p:"Build an interactive map of mathematics as a zoomable constellation: fields are star clusters (algebra, geometry, analysis, number theory, topology…), connected by glowing edges where fields feed each other, each node opening a one-paragraph plain-language description with one mind-blowing fact. Hand-curate ~40 nodes in the code. Pan, zoom, search, and a guided 'tour' mode. "+POLISH},
+
+/* ---------- 🛠️ Micro-Tools ---------- */
+{c:"Micro-Tools",w:4,t:"Focus Forest",p:"Build a pomodoro timer where each completed focus session grows a procedural tree in my forest, and abandoning a session withers it. Forest persists in localStorage and becomes a visual history of my focus. Session lengths configurable, gentle WebAudio chime, a stats panel (streaks, total hours), and an ambient day/night cycle matching real time. "+POLISH},
+{c:"Micro-Tools",w:4,t:"Decision Roulette Deluxe",p:"Create a decision-maker: type options, spin a gorgeous physical wheel with momentum, friction, and a satisfying tick sound per peg (WebAudio). Confetti for the winner. Include weighted options, a history log, preset wheels (lunch, chores, who-goes-first), and a 'veto and respin' button that shamefully tracks how many times I rejected fate. "+POLISH},
+{c:"Micro-Tools",w:5,t:"Markdown Slide Theater",p:"Build a presentation tool: I write markdown in a left pane (--- separates slides) and get live themed slides on the right; hit Present for fullscreen with keyboard navigation, speaker timer, and progress bar. Ship 4 polished themes, code syntax highlighting implemented in vanilla JS, and export-to-self-contained-HTML so the deck itself is shareable. "+POLISH},
+{c:"Micro-Tools",w:4,t:"Screenshot Beautifier",p:"Make a tool that turns boring screenshots into shareable images: paste or drop an image, and it gets a gradient backdrop, rounded corners, realistic drop shadow, optional macOS-style window chrome, and padding controls. Live preview, multiple backdrop styles, and one-click PNG export at 2x. Everything client-side via canvas. "+POLISH},
+{c:"Micro-Tools",w:4,t:"Cron Explainer & Builder",p:"Build the friendliest cron tool: type a cron expression and get a plain-English sentence, a visual calendar heat-strip of upcoming runs, and warnings for classic mistakes. Or build visually with dropdowns and copy the expression. Include 10 common recipes, fully client-side parsing written from scratch. "+POLISH},
+{c:"Micro-Tools",w:5,t:"Interactive Regex Playground",p:"Create a regex playground that teaches while you type: pattern input with live syntax coloring, test text with highlighted matches and groups, a hover-to-explain breakdown of every token in my pattern, and a railroad-style diagram of the expression rendered on canvas. Include a challenge mode with 10 progressively tricky extraction puzzles. "+POLISH},
+
+/* ---------- 🧠 AI & Agents ---------- */
+{c:"AI & Agents",w:5,t:"Agent Org Chart Designer",p:"Build a visual designer for multi-agent systems: drag agent nodes onto a canvas (orchestrator, researcher, coder, critic…), connect them with labeled message-passing edges, configure each agent's role and system-prompt snippet in a side panel, then export the whole design as clean JSON and as a runnable Claude API pseudocode scaffold. Include 3 preset architectures (pipeline, debate, hierarchical). "+POLISH},
+{c:"AI & Agents",w:4,t:"Prompt Diff Lab",p:"Create a tool for prompt engineers: two prompt versions side by side with word-level diff highlighting, a checklist-based quality score (has role? constraints? output format? examples? edge cases?), and a library of 12 named prompt patterns (chain-of-thought, few-shot, rubric, persona…) that can be injected with one click. Save versions to localStorage with notes. "+POLISH},
+{c:"AI & Agents",w:5,t:"Tokenizer Intuition Builder",p:"Build an interactive explainer of how LLMs see text: type anything and watch it split into colored token chunks (implement a simplified BPE trained on a small embedded corpus — actually run the merges, don't fake it), with a counter, cost estimator at configurable prices, and 'gotcha' demos: why 'strawberry' letter-counting is hard, why numbers tokenize weirdly. "+POLISH},
+{c:"AI & Agents",w:4,t:"Context Window Packing Game",p:"Make a puzzle game that teaches context management: documents of different sizes and relevance scores must be packed into a limited context window (a literal container) to answer a question; irrelevant docs waste space, and you score on answer quality per token. 8 hand-designed levels with increasing nuance (duplicates, contradictions, one critical small doc). Genuinely educational. "+POLISH},
+{c:"AI & Agents",w:4,t:"System Prompt Architect",p:"Build a guided builder for system prompts: a form with smart sections (identity, capabilities, constraints, tone, output format, refusals, examples), live-assembled preview with section highlighting, lint warnings (contradictions, vagueness, missing output spec), and export. Ship 5 strong templates: coding assistant, data analyst, tutor, customer support, dungeon master. "+POLISH},
+
+/* ---------- 🌀 Weird & Wonderful ---------- */
+{c:"Weird & Wonderful",w:5,t:"The Button That Doesn't Want to Be Pressed",p:"Create a single button on a page that desperately avoids being clicked: it dodges the cursor with increasingly clever evasion (teleports, fakes, splits into decoys, hides behind a fake error dialog, flips the page upside down), narrating its feelings in captions as it grows more desperate. If I finally click it, an over-the-top reward sequence concedes defeat. At least 12 distinct escalating behaviors. "+POLISH},
+{c:"Weird & Wonderful",w:5,t:"Civilization in My Cursor Trail",p:"Make a page where tiny settlers spawn along my mouse trail and build a civilization on the paths I draw: trails become roads, intersections become villages, villages grow into cities with light and tiny moving citizens. Idle long enough and they erect a monument to the cursor-god. A chronicle log narrates their history in deadpan epic prose. "+POLISH},
+{c:"Weird & Wonderful",w:4,t:"Honest Loading Screen",p:"Build a loading screen for nothing: a progress bar that lies, recalculates, moonwalks backwards, and shows increasingly absurd status messages ('Reticulating splines', 'Convincing electrons', 'Negotiating with the progress bar union'). Hidden interactions everywhere — the bar can be grabbed and dragged to 100%, which it resents. End with an award for patience. At least 40 messages and 8 secrets. "+POLISH},
+{c:"Weird & Wonderful",w:4,t:"Gravity Switch Dance Party",p:"Make a page full of normal-looking UI (cards, buttons, a form) where pressing G turns on gravity: everything tumbles with real 2D physics, collides, and can be flung with the mouse. Press G again and elements scramble back to their places, slightly embarrassed. Add a disco mode (D) with music via WebAudio and elements bouncing on beat. "+POLISH},
+{c:"Weird & Wonderful",w:5,t:"Tamagotchi Tab",p:"Create a pet that lives in my browser tab: the favicon and title ARE the pet — it blinks, eats, sleeps, and emotes through favicon frames drawn on an offscreen canvas, with the tab title as its speech ('feed me', 'zzz'). The full page is its room with feeding/play/cleaning interactions. It notices when I leave the tab and sulks about it when I return. State persists. "+POLISH},
+{c:"Weird & Wonderful",w:4,t:"Museum of Cursed UI",p:"Build an interactive museum of intentionally terrible interface patterns: a volume knob you set by throwing it, a date picker that only does Morse code, a password field with a hamster wheel strength meter, a slider that's seasick. 8 exhibits, each on a pedestal with a deadpan museum placard explaining its 'historical significance'. Fully functional — that's the joke. "+POLISH},
+
+/* ---------- 📚 Learning & Story ---------- */
+{c:"Learning & Story",w:5,t:"Choose-Your-Own Sci-Fi Novella",p:"Write and build a complete interactive fiction piece: a 25+ node branching story about a lighthouse keeper on a generation ship, with meaningful choices, 4 distinct endings, inventory that gates paths, and prose worth reading. Typewriter text, a star-field backdrop, choice history map viewable at the end, and save/restore via localStorage. Write the actual story — make it good. "+POLISH},
+{c:"Learning & Story",w:4,t:"Speed-Read Trainer",p:"Build an RSVP speed-reading trainer: paste any text and words flash one at a time at an adjustable WPM with smart pacing (longer pauses on long words and punctuation) and an optical focal point. Include comprehension self-test mode, progress charting across sessions, and a built-in public-domain short story to practice on. Calm, focused design. "+POLISH},
+{c:"Learning & Story",w:4,t:"Morse Code Dojo",p:"Create a Morse code trainer with the Koch method: start with 2 characters at full speed, add more as accuracy climbs. Real WebAudio tone keying, a tap-to-send practice mode that decodes my spacebar rhythm, progress tracking, and a final exam: decode a secret message that unlocks a celebratory easter egg. "+POLISH},
+{c:"Learning & Story",w:5,t:"The Fermi Paradox, Interactive",p:"Build an interactive essay on the Fermi paradox: a galaxy of 10,000 stars where I set the Drake equation parameters with sliders and watch civilizations ignite, expand, and vanish in time-lapse, while the essay text between visualizations walks through the great filter hypotheses. End with the haunting math of how alone (or not) my chosen parameters make us. Accurate, wondrous, unsettling. "+POLISH},
+{c:"Learning & Story",w:4,t:"Etymology Time Machine",p:"Create an explorable of 30 English words with surprising origins: each word is a card that animates its journey through time and languages on a map-like timeline (e.g., 'salary' from Roman salt rations). Hand-curate accurate etymologies in the code. Include a quiz mode that lets me guess origins, with delightful wrong-answer commentary. "+POLISH},
+];
+
+/* ============================================================
+   GOAL PROMPT MACHINE — slot reels
+   ============================================================ */
+const REELS = {
+  "Format": [
+    "arcade game","physics toy","ambient simulation","generative art piece","musical instrument",
+    "interactive explorable","productivity micro-app","digital pet","screensaver-grade experience",
+    "puzzle game","drawing tool","interactive story"
+  ],
+  "Subject": [
+    "deep-sea bioluminescence","a 1980s space station","a tiny walled garden","ant colonies","black holes",
+    "a night train through mountains","tide pools","a wizard's messy desk","glacier caves","fireflies in a jar",
+    "an abandoned arcade","paper boats in rain gutters","the inside of a clock","a lighthouse in a storm",
+    "mushroom networks","a city of moths","origami creatures","desert constellations","a haunted vending machine",
+    "submarine sonar","greenhouse robots","migrating whales","a clockwork orchestra","lava lamps",
+    "library ghosts","weather balloons","crystal caverns","a snail mail postal service","rooftop gardens","retro terminals"
+  ],
+  "Mechanic": [
+    "controlled with only one key","driven entirely by mouse trails","everything orbits something",
+    "time can be rewound","it grows while you're away","sound is the only feedback",
+    "you play as the environment, not the character","cellular automata under the hood",
+    "real physics with springs and gravity","it evolves by natural selection","drawing creates the level",
+    "typing is the controller","it responds to the real-world clock","resources flow like liquids",
+    "everything is connected by ropes","gravity flips on a rhythm","light and shadow are mechanics",
+    "the UI elements are the characters"
+  ],
+  "Aesthetic": [
+    "synthwave neon","hand-drawn ink on paper","blueprint cyan on navy","cozy pixel art","brutalist black and white",
+    "watercolor wash","CRT terminal green","paper cutout diorama","stained glass","isometric minimal",
+    "chalkboard sketch","vaporwave pastel","firefly-lit darkness","Bauhaus geometric","botanical illustration","deep ocean gloom"
+  ],
+  "Twist": [
+    "it secretly tells a story if you pay attention","there's a hidden creature that watches you",
+    "it gets melancholy at night (real clock)","perfect play unlocks a secret mode",
+    "it remembers everything between visits","one element is sentient and comments on your choices",
+    "the soundtrack is generated from your actions","destruction is more beautiful than creation",
+    "it can be 'won' but winning is bittersweet","an entire tiny ecosystem hides in the corner",
+    "the title screen is playable","idle long enough and something magical happens",
+    "your mistakes become permanent art","it has moods that change how it behaves",
+    "somewhere there is a tiny door, and it opens"
+  ],
+};
+const GOAL = 4000;
+
+/* ============================================================
+   state + persistence
+   ============================================================ */
+let forged = +localStorage.getItem("forge.count") || 0;
+const cats = ["All", ...new Set(PROMPTS.map(p => p.c))];
+let activeCat = "All";
+let locks = {};      // reel name -> locked value
+let current = {};    // reel name -> current value
+let lastGenerated = "";
+
+/* ============================================================
+   forge meter
+   ============================================================ */
+function renderMeter(){
+  document.getElementById("forgedCount").textContent = forged.toLocaleString();
+  const pct = Math.min(100, forged / GOAL * 100);
+  document.getElementById("forgedBar").style.width = pct + "%";
+}
+function bump(n=1){
+  forged += n;
+  localStorage.setItem("forge.count", forged);
+  renderMeter();
+}
+
+/* ============================================================
+   library rendering
+   ============================================================ */
+function star(w){ return "★".repeat(w) + "☆".repeat(5-w); }
+
+function renderChips(){
+  const el = document.getElementById("chips");
+  el.innerHTML = "";
+  cats.forEach(c => {
+    const b = document.createElement("button");
+    b.className = "chip" + (c === activeCat ? " on" : "");
+    b.textContent = c === "All" ? `All (${PROMPTS.length})` : c;
+    b.onclick = () => { activeCat = c; renderChips(); renderGrid(); };
+    el.appendChild(b);
+  });
+}
+
+function renderGrid(){
+  const q = document.getElementById("search").value.toLowerCase();
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  const matches = PROMPTS.filter(p =>
+    (activeCat === "All" || p.c === activeCat) &&
+    (!q || (p.t + " " + p.p + " " + p.c).toLowerCase().includes(q))
+  );
+  document.getElementById("noResults").style.display = matches.length ? "none" : "block";
+  matches.forEach(p => grid.appendChild(card(p)));
+}
+
+function card(p){
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `
+    <div class="card-top"><h3>${p.t}</h3><span class="cat">${p.c}</span></div>
+    <div class="wow" title="wow factor">${star(p.w)}</div>
+    <p class="ptext">${p.p}</p>
+    <div class="card-actions">
+      <button class="mini copy">📋 Copy prompt</button>
+      <button class="mini expand">↕ Expand</button>
+    </div>`;
+  el.querySelector(".copy").onclick = (e) => copyPrompt(p.p, e.target);
+  el.querySelector(".expand").onclick = () => el.classList.toggle("open");
+  return el;
+}
+
+function copyPrompt(text, btn){
+  navigator.clipboard.writeText(text).then(() => {
+    bump();
+    toast("Copied — go forge it ⚡");
+    if (btn){
+      btn.classList.add("copied"); btn.textContent = "✓ Copied";
+      setTimeout(() => { btn.classList.remove("copied"); btn.textContent = "📋 Copy prompt"; }, 1500);
+    }
+  }).catch(() => toast("Couldn't access clipboard — select & copy manually"));
+}
+
+/* ============================================================
+   surprise me
+   ============================================================ */
+document.getElementById("surprise").onclick = () => {
+  // 50/50: a curated gem or a fresh machine spin
+  if (Math.random() < 0.5){
+    const p = PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
+    copyPrompt(p.p);
+    toast(`🎲 "${p.t}" → clipboard`);
+  } else {
+    switchTab("machine");
+    spin();
+  }
+};
+
+/* ============================================================
+   the machine
+   ============================================================ */
+function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+function renderSlots(){
+  const el = document.getElementById("slots");
+  el.innerHTML = "";
+  Object.keys(REELS).forEach(name => {
+    const d = document.createElement("div");
+    d.className = "slot" + (locks[name] ? " locked" : "");
+    d.innerHTML = `<span class="lock">🔒</span><div class="lbl">${name}</div><div class="val">${current[name] || "—"}</div>`;
+    d.title = "Click to lock/unlock this reel";
+    d.onclick = () => {
+      if (locks[name]) delete locks[name];
+      else if (current[name]) locks[name] = current[name];
+      renderSlots();
+    };
+    el.appendChild(d);
+  });
+}
+
+function assemble(c){
+  return `Create a ${c["Format"]} about ${c["Subject"]}. Core mechanic: ${c["Mechanic"]}. ` +
+    `Visual style: ${c["Aesthetic"]}. The twist: ${c["Twist"]}. ` + POLISH;
+}
+
+function spin(){
+  Object.keys(REELS).forEach(name => {
+    current[name] = locks[name] || pick(REELS[name]);
+  });
+  lastGenerated = assemble(current);
+  renderSlots();
+  document.querySelectorAll(".slot").forEach(s => {
+    s.classList.remove("spin"); void s.offsetWidth; s.classList.add("spin");
+  });
+  const out = document.getElementById("genOut");
+  out.classList.remove("empty");
+  out.textContent = lastGenerated;
+  bump();
+}
+
+document.getElementById("spin").onclick = spin;
+document.getElementById("copyGen").onclick = (e) => {
+  if (!lastGenerated) { toast("Spin first 🎰"); return; }
+  copyPrompt(lastGenerated, e.target);
+};
+
+// combination count
+(function(){
+  const n = Object.values(REELS).reduce((a, r) => a * r.length, 1);
+  document.getElementById("comboCount").textContent = n.toLocaleString();
+})();
+
+/* ============================================================
+   tabs, toast, init
+   ============================================================ */
+function switchTab(name){
+  document.querySelectorAll("nav button").forEach(b =>
+    b.classList.toggle("on", b.dataset.tab === name));
+  ["library","machine","about"].forEach(t =>
+    document.getElementById("tab-" + t).style.display = t === name ? "" : "none");
+}
+document.querySelectorAll("nav button").forEach(b =>
+  b.onclick = () => switchTab(b.dataset.tab));
+
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+document.getElementById("search").addEventListener("input", renderGrid);
+
+renderMeter();
+renderChips();
+renderGrid();
+renderSlots();
+</script>
+</body>
+</html>
