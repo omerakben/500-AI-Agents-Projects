@@ -61,6 +61,7 @@ python agent.py
 | Understand which framework to use | [Framework Comparison](#-framework-comparison) |
 | Add my own agent | [Contributing](CONTRIBUTION.md) |
 | Learn with a course | [`crewai_mcp_course/`](crewai_mcp_course/) |
+| Forge single-shot Claude prompts | [`fable5-prompt-library/`](fable5-prompt-library/) |
 
 ---
 
