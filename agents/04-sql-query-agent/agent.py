@@ -104,6 +104,8 @@ def main():
     if args.db == "demo.sqlite" and not os.path.exists("demo.sqlite"):
         print("🏗️  Creating demo e-commerce database...")
         create_demo_database("demo.sqlite")
+    elif not os.path.exists(args.db):
+        raise SystemExit(f"❌ Error: Database file not found at {args.db}")
 
     agent, db = build_agent(args.db, read_only=not args.allow_write)
     print(f"\n📊 Connected to: {args.db}")

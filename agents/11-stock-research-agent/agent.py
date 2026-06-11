@@ -1,5 +1,5 @@
 """
-Stock Research Agent using Agno + Yahoo Finance.
+Stock Research Agent using LangChain + Yahoo Finance.
 
 Provides comprehensive stock analysis: price data, financials,
 analyst ratings, and AI-powered investment summary.

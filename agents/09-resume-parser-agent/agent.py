@@ -74,7 +74,7 @@ def read_resume_text(path: str) -> str:
             import pypdf
             with open(path, "rb") as f:
                 reader = pypdf.PdfReader(f)
-                return "\n".join(page.extract_text() for page in reader.pages)
+                return "\n".join(page.extract_text() or "" for page in reader.pages)
         except ImportError:
             print("⚠️  pypdf not installed. Install with: pip install pypdf")
             raise

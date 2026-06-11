@@ -38,7 +38,8 @@ def identify_competitors(state: AnalysisState) -> AnalysisState:
         SystemMessage(content="You are a market research analyst. List exactly 5 main competitors as a comma-separated list. Nothing else."),
         HumanMessage(content=f"Company: {state['company']}\nIndustry: {state['industry']}\n\nList 5 main competitors:"),
     ])
-    competitors = [c.strip() for c in response.content.split(",")][:5]
+    raw_competitors = response.content.replace("\n", ",").split(",")
+    competitors = [c.strip().lstrip("0123456789.- ") for c in raw_competitors if c.strip()][:5]
     return {"competitors": competitors, "messages": [response]}
 
 

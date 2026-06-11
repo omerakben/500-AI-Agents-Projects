@@ -36,6 +36,9 @@ jobs:
           node-version: 22
 
       - name: Setup Pages
+        # Requires the Pages site to exist; skip on PR builds so forks
+        # without Pages enabled can still validate the build.
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
         with:
           enablement: true

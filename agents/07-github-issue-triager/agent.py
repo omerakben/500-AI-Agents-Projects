@@ -77,9 +77,12 @@ def fetch_github_issue(url: str) -> tuple[str, str, list]:
     if token := os.getenv("GITHUB_TOKEN"):
         headers["Authorization"] = f"token {token}"
 
-    r = requests.get(api_url, headers=headers, timeout=10)
-    r.raise_for_status()
-    data = r.json()
+    try:
+        r = requests.get(api_url, headers=headers, timeout=10)
+        r.raise_for_status()
+        data = r.json()
+    except requests.RequestException as e:
+        raise SystemExit(f"❌ Error fetching GitHub issue: {e}")
     return data["title"], data.get("body", ""), [l["name"] for l in data.get("labels", [])]
 
 

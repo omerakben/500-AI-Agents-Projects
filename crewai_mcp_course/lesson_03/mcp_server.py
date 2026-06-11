@@ -9,7 +9,7 @@ Run: python mcp_server.py
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 try:
     from fastmcp import FastMCP
@@ -29,7 +29,7 @@ def create_mcp_server():
     @mcp.tool()
     def get_datetime() -> str:
         """Get the current date and time in UTC."""
-        return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     @mcp.tool()
     def prioritize_tasks(tasks: list[str]) -> str:

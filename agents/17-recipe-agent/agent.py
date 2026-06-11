@@ -1,5 +1,5 @@
 """
-Recipe Recommendation Agent using Agno-style single agent.
+Recipe Recommendation Agent using LangChain.
 
 Suggests recipes based on available ingredients, dietary restrictions,
 and time constraints.
