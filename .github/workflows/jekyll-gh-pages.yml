@@ -10,6 +10,7 @@ on:
       - "README.md"
       - "agents/**"
       - "crewai_mcp_course/**"
+      - "fable5-prompt-library/**"
       - ".github/workflows/jekyll-gh-pages.yml"
   workflow_dispatch:
 
@@ -36,6 +37,8 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Install website dependencies
         run: npm install
@@ -44,6 +47,9 @@ jobs:
       - name: Build React atlas
         run: npm run build
         working-directory: web
+
+      - name: Add Fable 5 Prompt Forge to site
+        run: cp -r fable5-prompt-library web/dist/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
