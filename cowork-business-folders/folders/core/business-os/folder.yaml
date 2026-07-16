@@ -1,0 +1,46 @@
+slug: business-os
+name: Business OS
+category: core
+version: 0.1.0
+summary: >
+  The operating layer for any business: a memory of what matters, a morning
+  brief to start the day, an end-of-day log, and a running decision record.
+same_day_win: >
+  A prioritized morning brief generated from your profile and today's context,
+  saved to reports/ — produced in your first session.
+
+connectors:
+  - name: Google Calendar
+    required: false
+    why: Pull today's meetings into the morning brief and prep for them.
+  - name: Gmail
+    required: false
+    why: Surface unread threads that need a decision in the morning brief.
+  - name: Google Drive
+    required: false
+    why: Reference docs you point to without pasting them in.
+
+skills:
+  - slug: morning-brief
+    summary: Assemble a prioritized start-of-day brief from memory and connectors.
+  - slug: eod-log
+    summary: Capture what happened today and roll updates back into memory.
+  - slug: decision-log
+    summary: Record a decision with context, options, and rationale.
+  - slug: meeting-prep
+    summary: Prepare a one-page brief for an upcoming meeting.
+
+schedules:
+  - slug: morning-brief
+    cadence: "weekdays 08:00"
+    summary: Generate and save the morning brief.
+  - slug: eod-log
+    cadence: "weekdays 18:00"
+    summary: Log the day and update memory.
+
+workflows:
+  - slug: weekly-review
+    summary: Roll up the week and set next week's priorities.
+
+maintainers:
+  - omerakben
