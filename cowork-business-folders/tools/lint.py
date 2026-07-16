@@ -169,13 +169,8 @@ def discover_folders(args: list[str]) -> list[Path]:
     if args == ["--all"]:
         base = REPO_ROOT / "folders"
         return sorted(p.parent for p in base.rglob("folder.yaml"))
-    folders: list[Path] = []
-    for a in args:
-        p = Path(a)
-        if not p.is_absolute():
-            p = (Path.cwd() / p)
-        folders.append(p.resolve())
-    return folders
+    # Path.resolve() handles both relative (against cwd) and absolute paths.
+    return [Path(a).resolve() for a in args]
 
 
 def main(argv: list[str]) -> int:
