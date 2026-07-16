@@ -1,0 +1,30 @@
+# Manifest for your folder. See ../../standard/SPEC.md and validate with tools/lint.py.
+slug: your-folder-slug            # kebab-case; must match the directory name
+name: Your Folder Name
+category: core                    # core | finance | growth | operations | people | professional | commerce
+version: 0.1.0
+summary: >
+  One sentence: what this folder does for the business.
+same_day_win: >
+  What the user gets in their first ~20-minute session.
+
+connectors:
+  - name: Gmail
+    required: false
+    why: Explain what enabling this connector unlocks.
+
+skills:
+  - slug: your-first-skill
+    summary: What this skill does.
+
+schedules:
+  - slug: morning-brief
+    cadence: "weekdays 08:00"
+    summary: What runs on this schedule.
+
+# workflows:            # optional
+#   - slug: weekly-review
+#     summary: Roll up the week.
+
+maintainers:
+  - your-github-handle

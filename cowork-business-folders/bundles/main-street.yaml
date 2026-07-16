@@ -1,0 +1,31 @@
+slug: main-street
+name: Main Street
+summary: >
+  For a local retail or service business. Combines the operating layer, a front desk,
+  bookkeeping, and a marketing engine — sharing one memory tree and rolling up into a
+  single morning brief and end-of-day report.
+for: Local retail & service owners running the whole thing themselves.
+
+# Folders composed by this pack, in install order.
+folders:
+  - core/business-os        # the operating layer — install first
+  - core/front-desk         # inbox, scheduling, follow-ups        (planned)
+  - finance/books-and-close # bookkeeping & month-end              (planned)
+  - growth/marketing-engine # content & campaigns                  (planned)
+
+# How the pack behaves once assembled.
+shared_memory: business-os/memory   # all folders read/write this one tree
+merged_reports:
+  morning_brief: business-os/schedules/morning-brief.md  # one brief for the whole shop
+  eod_log: business-os/schedules/eod-log.md              # one end-of-day log
+
+# Install: copy each folder, then point every folder's memory/ at the shared tree
+# (symlink or a single combined folder). See ./README.md.
+install_notes: >
+  Install business-os first and complete its setup.md. Then add the other folders and,
+  for each, replace its memory/ with a link to business-os/memory so the business has
+  one memory. Only business-os needs scheduled tasks — its brief and log pull from the
+  shared memory the other folders write to.
+
+maintainers:
+  - omerakben
